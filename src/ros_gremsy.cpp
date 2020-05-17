@@ -24,13 +24,12 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     f = boost::bind(&GimbalNode::callbackRC, this, _1, _2);
     server.setCallback(f);
 
-    int baudrate = 115200; //TODO param
+    int baudrate;
+    std::string device;
 
-    printf("Lol\n");
-
-    const char* device = "/dev/ttyS0";
-
-    Serial_Port serial_port(device, baudrate);
+    pnh.getParam("device", device);
+    pnh.getParam("baudrate", baudrate);
+    Serial_Port serial_port(device.c_str(), baudrate);
     Gimbal_Interface gimbal_interface(&serial_port);
 
     /**
@@ -53,10 +52,7 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 }
 
 void GimbalNode::callbackRC(ros_gremsy::ROSGremsyConfig &config, uint32_t level) {
-    // Set color temperature
-    //WhiteBalancer::set_temp(config.temp);
-    // Set timestamp delay
-    //WhiteBalancer::set_delay(config.timestamp_offset);
+
 }
 
 int main(int argc, char **argv)

@@ -1,1 +1,3 @@
 # Config
+device: "/dev/ttyS0"
+baudrate: 115200
