@@ -1,0 +1,3 @@
+[submodule "gSDK_Linux"]
+	path = gSDK_Linux
+	url = git@github.com:gChuNguyen/gSDK_Linux.git
