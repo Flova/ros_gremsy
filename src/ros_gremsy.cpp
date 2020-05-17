@@ -2,6 +2,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <ros_gremsy/ROSGremsyConfig.h>
 #include <boost/bind.hpp>
+#include "gimbal_interface.h"
+#include "serial_port.h"
 
 class GimbalNode
 {
@@ -9,19 +11,29 @@ public:
     // Params: (public node handler (for e.g. callbacks), private node handle (for e.g. dynamic reconfigure))
     GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh);
     // Dynamic reconfigure callback
-    void callbackRC(ros_gremsy::WhiteBalancerConfig &config, uint32_t level);
+    void callbackRC(ros_gremsy::ROSGremsyConfig &config, uint32_t level);
 private:
-    int temp = 400;
+    Gimbal_Interface gimbal_interface(Serial_Port *serial_port_);
 };
 
 GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 {
     // Dynamic reconfigure stuff
-    dynamic_reconfigure::Server<ros_gremsy::WhiteBalancerConfig> server(pnh);
-    dynamic_reconfigure::Server<ros_gremsy::WhiteBalancerConfig>::CallbackType f;
+    dynamic_reconfigure::Server<ros_gremsy::ROSGremsyConfig> server(pnh);
+    dynamic_reconfigure::Server<ros_gremsy::ROSGremsyConfig>::CallbackType f;
     f = boost::bind(&GimbalNode::callbackRC, this, _1, _2);
     server.setCallback(f);
 
+    int baudrate = 115200; //TODO param
+
+    printf("Lol\n");
+
+    const char* device = "/dev/ttyS0";
+
+    Serial_Port serial_port(device, baudrate);
+    Gimbal_Interface gimbal_interface(&serial_port);
+
+    /**
     std::string ROS_output_topic, ROS_input_topic;
     if (pnh.getParam("/gimbal/ROS_output_topic", ROS_output_topic)) {
         GimbalNode::pub = it.advertise(ROS_output_topic, 1);
@@ -35,12 +47,12 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     } else {
         ROS_ERROR("No input topic set");
         exit(2);
-    }
+    }**/
 
     ros::spin();
 }
 
-void GimbalNode::callbackRC(white_balancer::WhiteBalancerConfig &config, uint32_t level) {
+void GimbalNode::callbackRC(ros_gremsy::ROSGremsyConfig &config, uint32_t level) {
     // Set color temperature
     //WhiteBalancer::set_temp(config.temp);
     // Set timestamp delay
