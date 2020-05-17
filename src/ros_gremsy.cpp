@@ -1,4 +1,6 @@
+#include <unistd.h>
 #include <ros/ros.h>
+#include <sensor_msgs/Imu.h>
 #include <dynamic_reconfigure/server.h>
 #include <ros_gremsy/ROSGremsyConfig.h>
 #include <boost/bind.hpp>
@@ -10,10 +12,19 @@ class GimbalNode
 public:
     // Params: (public node handler (for e.g. callbacks), private node handle (for e.g. dynamic reconfigure))
     GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh);
+private:
     // Dynamic reconfigure callback
     void callbackRC(ros_gremsy::ROSGremsyConfig &config, uint32_t level);
-private:
-    Gimbal_Interface gimbal_interface(Serial_Port *serial_port_);
+    void gimbalStateTimerCallback(const ros::TimerEvent& event);
+    sensor_msgs::Imu convertMavlinkToROSMessage(mavlink_raw_imu_t message);
+    // Gimbal SDK
+    Gimbal_Interface* gimbal_interface_;
+    // Serial Interface
+    Serial_Port* serial_port_;
+    // Current config
+    ros_gremsy::ROSGremsyConfig config_;
+    // Publishers
+    ros::Publisher imu_pub;
 };
 
 GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
@@ -24,35 +35,67 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     f = boost::bind(&GimbalNode::callbackRC, this, _1, _2);
     server.setCallback(f);
 
+    imu_pub = nh.advertise<sensor_msgs::Imu>("/gimbal/imu/data", 10);
+
     int baudrate;
     std::string device;
 
-    pnh.getParam("device", device);
-    pnh.getParam("baudrate", baudrate);
-    Serial_Port serial_port(device.c_str(), baudrate);
-    Gimbal_Interface gimbal_interface(&serial_port);
+    serial_port_ = new Serial_Port(config_.device.c_str(), config_.baudrate);
+    gimbal_interface_ = new Gimbal_Interface(serial_port_);
 
-    /**
-    std::string ROS_output_topic, ROS_input_topic;
-    if (pnh.getParam("/gimbal/ROS_output_topic", ROS_output_topic)) {
-        GimbalNode::pub = it.advertise(ROS_output_topic, 1);
-    } else {
-        ROS_ERROR("No output topic set");
-        exit(2);
+    serial_port_->start();
+	gimbal_interface_->start();
+
+    ros::Duration(1.0).sleep(); // Wait until everythins is started (Only just in case)
+
+    // Check if gimbal is on
+    if(gimbal_interface_->get_gimbal_status().mode == GIMBAL_STATE_OFF)
+    {
+        // Turn on gimbal
+        ROS_INFO("TURN_ON!\n");
+        gimbal_interface_->set_gimbal_motor_mode(TURN_ON);
     }
-    image_transport::Subscriber sub;
-    if (pnh.getParam("/gimbal/ROS_input_topic", ROS_input_topic)) {
-         sub = it.subscribe(ROS_input_topic, 1, &GimbalNode::imageCallback, this);
-    } else {
-        ROS_ERROR("No input topic set");
-        exit(2);
-    }**/
+
+    // Wait until the gimbal is on
+    while (gimbal_interface_->get_gimbal_status().mode != GIMBAL_STATE_ON)
+    {
+        ros::Duration(0.05).sleep();
+    }
+
+    ros::Timer timer = nh.createTimer(
+        ros::Duration(1/config_.state_poll_rate),
+        &GimbalNode::gimbalStateTimerCallback, this);
 
     ros::spin();
 }
 
-void GimbalNode::callbackRC(ros_gremsy::ROSGremsyConfig &config, uint32_t level) {
+void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
+{
+    mavlink_raw_imu_t imu_mav = gimbal_interface_->get_gimbal_raw_imu();
+    imu_mav.time_usec = gimbal_interface_->get_gimbal_time_stamps().raw_imu; // TODO implement rostime
+    sensor_msgs::Imu imu_ros_mag = convertMavlinkToROSMessage(imu_mav);
+    imu_pub.publish(imu_ros_mag);
+}
 
+sensor_msgs::Imu GimbalNode::convertMavlinkToROSMessage(mavlink_raw_imu_t message)
+{
+    sensor_msgs::Imu imu_message;
+
+    // Set accelaration data
+    imu_message.linear_acceleration.x = message.xacc;
+    imu_message.linear_acceleration.y = message.yacc;
+    imu_message.linear_acceleration.z = message.zacc;
+
+    // Set gyro data
+    imu_message.angular_velocity.x = message.xgyro;
+    imu_message.angular_velocity.y = message.ygyro;
+    imu_message.angular_velocity.z = message.zgyro;
+
+    return imu_message;
+}
+
+void GimbalNode::callbackRC(ros_gremsy::ROSGremsyConfig &config, uint32_t level) {
+    config_ = config;
 }
 
 int main(int argc, char **argv)
