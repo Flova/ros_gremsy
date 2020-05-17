@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="ros_gremsy" type="ros_gremsy" name="ros_gremsy" output="screen">
+        <rosparam command="load" file="$(find ros_gremsy)/config/config.yaml"/>
+    </node>
+</launch>
