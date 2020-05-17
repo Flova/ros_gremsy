@@ -25,9 +25,10 @@ include_directories(
 
 include_directories(
         gSDK_Linux/mavlink/include/mavlink/v2.0
+        gSDK_Linux/
 )
 
-set(SOURCES gSDK_Linux/mavlink_control.cpp gSDK_Linux/serial_port.cpp gSDK_Linux/gimbal_interface.cpp)
+set(SOURCES src/ros_gremsy.cpp gSDK_Linux/serial_port.cpp gSDK_Linux/gimbal_interface.cpp)
 
 add_executable(GimbalNode ${SOURCES})
 
