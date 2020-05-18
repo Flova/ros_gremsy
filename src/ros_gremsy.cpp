@@ -16,10 +16,16 @@ public:
 private:
     // Dynamic reconfigure callback
     void reconfigureCallback(ros_gremsy::ROSGremsyConfig &config, uint32_t level);
+    // Timer which checks for new infomation regarding the gimbal
     void gimbalStateTimerCallback(const ros::TimerEvent& event);
+    // Calback to set a new gimbal position
     void setGoalsCallback(geometry_msgs::Vector3Stamped message);
-    sensor_msgs::Imu convertMavlinkToROSMessage(mavlink_raw_imu_t message);
+    // Converts
+    sensor_msgs::Imu convertImuMavlinkMessageToROSMessage(mavlink_raw_imu_t message);
+    // Maps integer mode
     control_gimbal_axis_input_mode_t convertIntToAxisInputMode(int mode);
+    // Maps integer mode
+    control_gimbal_mode_t convertIntGimbalMode(int mode);
 
     // Gimbal SDK
     Gimbal_Interface* gimbal_interface_;
@@ -29,6 +35,7 @@ private:
     ros_gremsy::ROSGremsyConfig config_;
     // Publishers
     ros::Publisher imu_pub, encoder_pub;
+    // Subscribers
     ros::Subscriber gimbal_goal_sub;
 };
 
@@ -47,12 +54,11 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     // Register Subscribers
     gimbal_goal_sub = nh.subscribe("/gimbal/goals", 1, &GimbalNode::setGoalsCallback, this);
 
-    int baudrate;
-    std::string device;
-
+    // Define SDK objects
     serial_port_ = new Serial_Port(config_.device.c_str(), config_.baudrate);
     gimbal_interface_ = new Gimbal_Interface(serial_port_);
 
+    // Start ther serial interface and the gimbal SDK
     serial_port_->start();
 	gimbal_interface_->start();
 
@@ -78,15 +84,7 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 
     // Set gimbal control modes
 
-    control_gimbal_mode_t mode;
-
-    switch(config_.gimbal_mode) {
-        case 0 : mode = GIMBAL_OFF; break;
-        case 1 : mode = LOCK_MODE; break;
-        case 2 : mode = FOLLOW_MODE; break;
-    }
-
-    gimbal_interface_->set_gimbal_mode(mode);
+    gimbal_interface_->set_gimbal_mode(convertIntGimbalMode(config_.gimbal_mode));
 
     // Set modes for each axis
 
@@ -115,7 +113,7 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // Get Gimbal IMU
     mavlink_raw_imu_t imu_mav = gimbal_interface_->get_gimbal_raw_imu();
     imu_mav.time_usec = gimbal_interface_->get_gimbal_time_stamps().raw_imu; // TODO implement rostime
-    sensor_msgs::Imu imu_ros_mag = convertMavlinkToROSMessage(imu_mav);
+    sensor_msgs::Imu imu_ros_mag = convertImuMavlinkMessageToROSMessage(imu_mav);
     imu_pub.publish(imu_ros_mag);
 
     // Get Gimbal Encoder Values
@@ -124,9 +122,10 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     encoder_ros_msg.vector.x = mount_status.pointing_b;
     encoder_ros_msg.vector.y = mount_status.pointing_a;
     encoder_ros_msg.vector.z = mount_status.pointing_c;
-
     // encoder_ros_msg.header TODO time stamps
     encoder_pub.publish(encoder_ros_msg);
+
+
 
     // TODO publish mount orientation
 }
@@ -136,7 +135,7 @@ void GimbalNode::setGoalsCallback(geometry_msgs::Vector3Stamped message)
     gimbal_interface_->set_gimbal_move(message.vector.y, message.vector.x, message.vector.z);
 }
 
-sensor_msgs::Imu GimbalNode::convertMavlinkToROSMessage(mavlink_raw_imu_t message)
+sensor_msgs::Imu GimbalNode::convertImuMavlinkMessageToROSMessage(mavlink_raw_imu_t message)
 {
     sensor_msgs::Imu imu_message;
 
@@ -153,9 +152,18 @@ sensor_msgs::Imu GimbalNode::convertMavlinkToROSMessage(mavlink_raw_imu_t messag
     return imu_message;
 }
 
+control_gimbal_mode_t GimbalNode::convertIntGimbalMode(int mode)
+{   // Allows int access to the control_gimbal_mode_t struct
+    switch(mode) {
+        case 0 : return GIMBAL_OFF;
+        case 1 : return LOCK_MODE;
+        case 2 : return FOLLOW_MODE;
+    }
+}
+
 control_gimbal_axis_input_mode_t GimbalNode::convertIntToAxisInputMode(int mode)
-{
-    switch(config_.gimbal_mode) {
+{   // Allows int access to the control_gimbal_axis_input_mode_t struct
+    switch(mode) {
         case 0 : return CTRL_ANGLE_BODY_FRAME;
         case 1 : return CTRL_ANGULAR_RATE;
         case 2 : return CTRL_ANGLE_ABSOLUTE_FRAME;
