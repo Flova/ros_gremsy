@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
         roscpp
         dynamic_reconfigure
         std_msgs
+        geometry_msgs
         visualization_msgs
         )
 

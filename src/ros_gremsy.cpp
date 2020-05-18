@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
+#include <geometry_msgs/Vector3Stamped.h>
 #include <dynamic_reconfigure/server.h>
 #include <ros_gremsy/ROSGremsyConfig.h>
 #include <boost/bind.hpp>
@@ -26,7 +27,7 @@ private:
     // Current config
     ros_gremsy::ROSGremsyConfig config_;
     // Publishers
-    ros::Publisher imu_pub;
+    ros::Publisher imu_pub, encoder_pub;
 };
 
 GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
@@ -38,6 +39,7 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     server.setCallback(f);
 
     imu_pub = nh.advertise<sensor_msgs::Imu>("/gimbal/imu/data", 10);
+    encoder_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/gimbal/encoder", 10);
 
     int baudrate;
     std::string device;
@@ -104,10 +106,21 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 
 void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
 {
+    // Get Gimbal IMU
     mavlink_raw_imu_t imu_mav = gimbal_interface_->get_gimbal_raw_imu();
     imu_mav.time_usec = gimbal_interface_->get_gimbal_time_stamps().raw_imu; // TODO implement rostime
     sensor_msgs::Imu imu_ros_mag = convertMavlinkToROSMessage(imu_mav);
     imu_pub.publish(imu_ros_mag);
+
+    // Get Gimbal Encoder Values
+    mavlink_mount_status_t mount_status = gimbal_interface_->get_gimbal_mount_status();
+    geometry_msgs::Vector3Stamped encoder_ros_msg;
+    encoder_ros_msg.vector.x = mount_status.pointing_b;
+    encoder_ros_msg.vector.y = mount_status.pointing_a;
+    encoder_ros_msg.vector.z = mount_status.pointing_c;
+
+    // encoder_ros_msg.header TODO time stamps
+    encoder_pub.publish(encoder_ros_msg);
 }
 
 sensor_msgs::Imu GimbalNode::convertMavlinkToROSMessage(mavlink_raw_imu_t message)
