@@ -15,8 +15,9 @@ public:
     GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh);
 private:
     // Dynamic reconfigure callback
-    void callbackRC(ros_gremsy::ROSGremsyConfig &config, uint32_t level);
+    void reconfigureCallback(ros_gremsy::ROSGremsyConfig &config, uint32_t level);
     void gimbalStateTimerCallback(const ros::TimerEvent& event);
+    void setGoalsCallback(geometry_msgs::Vector3Stamped message);
     sensor_msgs::Imu convertMavlinkToROSMessage(mavlink_raw_imu_t message);
     control_gimbal_axis_input_mode_t convertIntToAxisInputMode(int mode);
 
@@ -28,6 +29,7 @@ private:
     ros_gremsy::ROSGremsyConfig config_;
     // Publishers
     ros::Publisher imu_pub, encoder_pub;
+    ros::Subscriber gimbal_goal_sub;
 };
 
 GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
@@ -35,11 +37,15 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     // Dynamic reconfigure stuff
     dynamic_reconfigure::Server<ros_gremsy::ROSGremsyConfig> server(pnh);
     dynamic_reconfigure::Server<ros_gremsy::ROSGremsyConfig>::CallbackType f;
-    f = boost::bind(&GimbalNode::callbackRC, this, _1, _2);
+    f = boost::bind(&GimbalNode::reconfigureCallback, this, _1, _2);
     server.setCallback(f);
 
+    // Advertive Publishers
     imu_pub = nh.advertise<sensor_msgs::Imu>("/gimbal/imu/data", 10);
     encoder_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/gimbal/encoder", 10);
+
+    // Register Subscribers
+    gimbal_goal_sub = nh.subscribe("/gimbal/goals", 1, &GimbalNode::setGoalsCallback, this);
 
     int baudrate;
     std::string device;
@@ -121,6 +127,13 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
 
     // encoder_ros_msg.header TODO time stamps
     encoder_pub.publish(encoder_ros_msg);
+
+    // TODO publish mount orientation
+}
+
+void GimbalNode::setGoalsCallback(geometry_msgs::Vector3Stamped message)
+{
+    gimbal_interface_->set_gimbal_move(message.vector.y, message.vector.x, message.vector.z);
 }
 
 sensor_msgs::Imu GimbalNode::convertMavlinkToROSMessage(mavlink_raw_imu_t message)
@@ -149,7 +162,7 @@ control_gimbal_axis_input_mode_t GimbalNode::convertIntToAxisInputMode(int mode)
     }
 }
 
-void GimbalNode::callbackRC(ros_gremsy::ROSGremsyConfig &config, uint32_t level) {
+void GimbalNode::reconfigureCallback(ros_gremsy::ROSGremsyConfig &config, uint32_t level) {
     config_ = config;
 }
 
