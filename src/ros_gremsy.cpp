@@ -17,6 +17,8 @@ private:
     void callbackRC(ros_gremsy::ROSGremsyConfig &config, uint32_t level);
     void gimbalStateTimerCallback(const ros::TimerEvent& event);
     sensor_msgs::Imu convertMavlinkToROSMessage(mavlink_raw_imu_t message);
+    control_gimbal_axis_input_mode_t convertIntToAxisInputMode(int mode);
+
     // Gimbal SDK
     Gimbal_Interface* gimbal_interface_;
     // Serial Interface
@@ -48,6 +50,10 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 
     ros::Duration(1.0).sleep(); // Wait until everythins is started (Only just in case)
 
+    ///////////////////
+    // Config Gimbal //
+    ///////////////////
+
     // Check if gimbal is on
     if(gimbal_interface_->get_gimbal_status().mode == GIMBAL_STATE_OFF)
     {
@@ -61,6 +67,33 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     {
         ros::Duration(0.05).sleep();
     }
+
+    // Set gimbal control modes
+
+    control_gimbal_mode_t mode;
+
+    switch(config_.gimbal_mode) {
+        case 0 : mode = GIMBAL_OFF; break;
+        case 1 : mode = LOCK_MODE; break;
+        case 2 : mode = FOLLOW_MODE; break;
+    }
+
+    gimbal_interface_->set_gimbal_mode(mode);
+
+    // Set modes for each axis
+
+    control_gimbal_axis_mode_t tilt_axis_mode, roll_axis_mode, pan_axis_mode;
+
+    tilt_axis_mode.input_mode = convertIntToAxisInputMode(config_.tilt_axis_input_mode);
+    tilt_axis_mode.stabilize = config_.tilt_axis_stabilize;
+
+    roll_axis_mode.input_mode = convertIntToAxisInputMode(config_.roll_axis_input_mode);
+    roll_axis_mode.stabilize = config_.roll_axis_stabilize;
+
+    pan_axis_mode.input_mode = convertIntToAxisInputMode(config_.pan_axis_input_mode);
+    pan_axis_mode.stabilize = config_.pan_axis_stabilize;
+
+    gimbal_interface_->set_gimbal_axes_mode(tilt_axis_mode, roll_axis_mode, pan_axis_mode);
 
     ros::Timer timer = nh.createTimer(
         ros::Duration(1/config_.state_poll_rate),
@@ -92,6 +125,15 @@ sensor_msgs::Imu GimbalNode::convertMavlinkToROSMessage(mavlink_raw_imu_t messag
     imu_message.angular_velocity.z = message.zgyro;
 
     return imu_message;
+}
+
+control_gimbal_axis_input_mode_t GimbalNode::convertIntToAxisInputMode(int mode)
+{
+    switch(config_.gimbal_mode) {
+        case 0 : return CTRL_ANGLE_BODY_FRAME;
+        case 1 : return CTRL_ANGULAR_RATE;
+        case 2 : return CTRL_ANGLE_ABSOLUTE_FRAME;
+    }
 }
 
 void GimbalNode::callbackRC(ros_gremsy::ROSGremsyConfig &config, uint32_t level) {
