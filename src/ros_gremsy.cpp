@@ -34,7 +34,11 @@ private:
     // Current config
     ros_gremsy::ROSGremsyConfig config_;
     // Publishers
-    ros::Publisher imu_pub, encoder_pub;
+    ros::Publisher
+        imu_pub,
+        encoder_pub,
+        mount_orientation_incl_global_yaw,
+        mount_orientation_incl_local_yaw;
     // Subscribers
     ros::Subscriber gimbal_goal_sub;
 };
