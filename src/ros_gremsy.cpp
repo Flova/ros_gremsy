@@ -1,47 +1,4 @@
-#include <unistd.h>
-#include <ros/ros.h>
-#include <sensor_msgs/Imu.h>
-#include <geometry_msgs/Vector3Stamped.h>
-#include <dynamic_reconfigure/server.h>
-#include <ros_gremsy/ROSGremsyConfig.h>
-#include <boost/bind.hpp>
-#include "gimbal_interface.h"
-#include "serial_port.h"
-
-class GimbalNode
-{
-public:
-    // Params: (public node handler (for e.g. callbacks), private node handle (for e.g. dynamic reconfigure))
-    GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh);
-private:
-    // Dynamic reconfigure callback
-    void reconfigureCallback(ros_gremsy::ROSGremsyConfig &config, uint32_t level);
-    // Timer which checks for new infomation regarding the gimbal
-    void gimbalStateTimerCallback(const ros::TimerEvent& event);
-    // Calback to set a new gimbal position
-    void setGoalsCallback(geometry_msgs::Vector3Stamped message);
-    // Converts
-    sensor_msgs::Imu convertImuMavlinkMessageToROSMessage(mavlink_raw_imu_t message);
-    // Maps integer mode
-    control_gimbal_axis_input_mode_t convertIntToAxisInputMode(int mode);
-    // Maps integer mode
-    control_gimbal_mode_t convertIntGimbalMode(int mode);
-
-    // Gimbal SDK
-    Gimbal_Interface* gimbal_interface_;
-    // Serial Interface
-    Serial_Port* serial_port_;
-    // Current config
-    ros_gremsy::ROSGremsyConfig config_;
-    // Publishers
-    ros::Publisher
-        imu_pub,
-        encoder_pub,
-        mount_orientation_incl_global_yaw,
-        mount_orientation_incl_local_yaw;
-    // Subscribers
-    ros::Subscriber gimbal_goal_sub;
-};
+#include <ros_gremsy/ros_gremsy.h>
 
 GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 {
