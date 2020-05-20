@@ -11,6 +11,9 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     // Advertive Publishers
     imu_pub = nh.advertise<sensor_msgs::Imu>("/gimbal/imu/data", 10);
     encoder_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/gimbal/encoder", 10);
+    mount_orientation_incl_global_yaw = nh.advertise<geometry_msgs::Quaternion>("/gimbal/mount_orientation_global_yaw", 10);
+    mount_orientation_incl_local_yaw = nh.advertise<geometry_msgs::Quaternion>("/gimbal/mount_orientation_local_yaw", 10);
+
 
     // Register Subscribers
     gimbal_goal_sub = nh.subscribe("/gimbal/goals", 1, &GimbalNode::setGoalsCallback, this);
@@ -86,9 +89,33 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // encoder_ros_msg.header TODO time stamps
     encoder_pub.publish(encoder_ros_msg);
 
+    // Get Mount Orientation
+    mavlink_mount_orientation_t mount_orientation = gimbal_interface_->get_gimbal_mount_orientation();
 
+    // Publish Camera Mount Orientation in global frame (drifting)
+    float torad = M_PI / 180.0;
+    tf2::Quaternion quat_abs;
+    quat_abs.setRPY(
+        torad * mount_orientation.roll,
+        torad * mount_orientation.pitch,
+        torad * mount_orientation.yaw_absolute);
+    quat_abs.normalize();
 
-    // TODO publish mount orientation
+    geometry_msgs::Quaternion quat_abs_msg;
+    tf2::convert(quat_abs , quat_abs_msg);
+    mount_orientation_incl_global_yaw.publish(quat_abs_msg);
+
+    // Publish Camera Mount Orientation in local frame (yaw relative to vehicle)
+    tf2::Quaternion quat_loc;
+    quat_loc.setRPY(
+        torad * mount_orientation.roll,
+        torad * mount_orientation.pitch,
+        torad * mount_orientation.yaw);
+    quat_loc.normalize();
+
+    geometry_msgs::Quaternion quat_loc_msg;
+    tf2::convert(quat_loc , quat_loc_msg);
+    mount_orientation_incl_local_yaw.publish(quat_loc_msg);
 }
 
 void GimbalNode::setGoalsCallback(geometry_msgs::Vector3Stamped message)
