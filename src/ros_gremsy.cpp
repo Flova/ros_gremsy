@@ -26,7 +26,7 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     serial_port_->start();
 	gimbal_interface_->start();
 
-    ros::Duration(1.0).sleep(); // Wait until everythins is started (Only just in case)
+    //ros::Duration(1.0).sleep(); // Wait until everythins is started (Only just in case)
 
     ///////////////////
     // Config Gimbal //
@@ -74,13 +74,13 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 
 void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
 {
-    // Get Gimbal IMU
+    // Publish Gimbal IMU
     mavlink_raw_imu_t imu_mav = gimbal_interface_->get_gimbal_raw_imu();
     imu_mav.time_usec = gimbal_interface_->get_gimbal_time_stamps().raw_imu; // TODO implement rostime
     sensor_msgs::Imu imu_ros_mag = convertImuMavlinkMessageToROSMessage(imu_mav);
     imu_pub.publish(imu_ros_mag);
 
-    // Get Gimbal Encoder Values
+    // Publish Gimbal Encoder Values
     mavlink_mount_status_t mount_status = gimbal_interface_->get_gimbal_mount_status();
     geometry_msgs::Vector3Stamped encoder_ros_msg;
     encoder_ros_msg.vector.x = mount_status.pointing_b;
