@@ -41,7 +41,6 @@ jobs:
         run: |
           cd ~/catkin_ws
           source /opt/ros/melodic/setup.bash
-          source devel/setup.bash
           rosdep update
           rosdep install --from-paths src --ignore-src -r -y
 
@@ -49,6 +48,5 @@ jobs:
         run: |
           cd ~/catkin_ws
           source /opt/ros/melodic/setup.bash
-          source devel/setup.bash
           catkin build ros_gremsy
 
