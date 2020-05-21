@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
         roscpp
+        tf2
+        tf2_geometry_msgs
         dynamic_reconfigure
         std_msgs
         geometry_msgs
