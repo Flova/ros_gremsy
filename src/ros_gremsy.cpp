@@ -83,9 +83,9 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // Publish Gimbal Encoder Values
     mavlink_mount_status_t mount_status = gimbal_interface_->get_gimbal_mount_status();
     geometry_msgs::Vector3Stamped encoder_ros_msg;
-    encoder_ros_msg.vector.x = mount_status.pointing_b;
-    encoder_ros_msg.vector.y = mount_status.pointing_a;
-    encoder_ros_msg.vector.z = mount_status.pointing_c;
+    encoder_ros_msg.vector.x = ((float) mount_status.pointing_b / 100.0) * DEG_TO_RAD;
+    encoder_ros_msg.vector.y = ((float) mount_status.pointing_a / 100.0) * DEG_TO_RAD;
+    encoder_ros_msg.vector.z = ((float) mount_status.pointing_c / 100.0) * DEG_TO_RAD;
     // encoder_ros_msg.header TODO time stamps
     encoder_pub.publish(encoder_ros_msg);
 
@@ -93,12 +93,11 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     mavlink_mount_orientation_t mount_orientation = gimbal_interface_->get_gimbal_mount_orientation();
 
     // Publish Camera Mount Orientation in global frame (drifting)
-    float torad = M_PI / 180.0;
     tf2::Quaternion quat_abs;
     quat_abs.setRPY(
-        torad * mount_orientation.roll,
-        torad * mount_orientation.pitch,
-        torad * mount_orientation.yaw_absolute);
+        DEG_TO_RAD * mount_orientation.roll,
+        DEG_TO_RAD * mount_orientation.pitch,
+        DEG_TO_RAD * mount_orientation.yaw_absolute);
     quat_abs.normalize();
 
     geometry_msgs::Quaternion quat_abs_msg;
@@ -108,9 +107,9 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // Publish Camera Mount Orientation in local frame (yaw relative to vehicle)
     tf2::Quaternion quat_loc;
     quat_loc.setRPY(
-        torad * mount_orientation.roll,
-        torad * mount_orientation.pitch,
-        torad * mount_orientation.yaw);
+        DEG_TO_RAD * mount_orientation.roll,
+        DEG_TO_RAD * mount_orientation.pitch,
+        DEG_TO_RAD * mount_orientation.yaw);
     quat_loc.normalize();
 
     geometry_msgs::Quaternion quat_loc_msg;
@@ -120,7 +119,10 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
 
 void GimbalNode::setGoalsCallback(geometry_msgs::Vector3Stamped message)
 {
-    gimbal_interface_->set_gimbal_move(message.vector.y, message.vector.x, message.vector.z);
+    gimbal_interface_->set_gimbal_move(
+        RAD_TO_DEG * message.vector.y,
+        RAD_TO_DEG * message.vector.x,
+        RAD_TO_DEG * message.vector.z);
 }
 
 sensor_msgs::Imu GimbalNode::convertImuMavlinkMessageToROSMessage(mavlink_raw_imu_t message)
