@@ -3,6 +3,8 @@ A ROS interface to control Gremsy gimbals. Based on the [gSDK](https://github.co
 
 Disclaimer: This software package is not officially developed by or related to Gremsy.
 
+![Build CI](https://github.com/Flova/ros_gremsy/workflows/Build%20CI/badge.svg)
+
 ## Description
 This package includes a ROS Node which warps the gSDK for the Gremsy Gimbals which are mainly used for physical image stabilization. 
 
