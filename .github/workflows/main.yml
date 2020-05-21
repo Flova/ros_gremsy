@@ -1,0 +1,54 @@
+name: Build CI
+
+on: [push, pull_request]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-18.04
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+        # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Setup ROS
+        uses: ros-tooling/setup-ros@0.0.16
+        with:
+          required-ros-distributions: melodic
+
+      - name: Install additional apt stuff
+        run: sudo apt install ros-melodic-catkin python-catkin-tools
+
+      - name: Source ROS
+        run: source /opt/ros/melodic/setup.bash
+
+      - name: Create catkin env
+        run: |
+          source /opt/ros/melodic/setup.bash
+          mkdir ~/catkin_ws
+          cd ~/catkin_ws
+          mkdir src
+          catkin init
+          ln -s $GITHUB_WORKSPACE src/ros_gremsy
+
+      - name: Install dependencies
+        run: |
+          cd ~/catkin_ws
+          source /opt/ros/melodic/setup.bash
+          source devel/setup.bash
+          rosdep update
+          rosdep install --from-paths src --ignore-src -r -y
+
+      - name: Build package
+        run: |
+          cd ~/catkin_ws
+          source /opt/ros/melodic/setup.bash
+          source devel/setup.bash
+          catkin build ros_gremsy
+
