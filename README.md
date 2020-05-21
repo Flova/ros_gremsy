@@ -24,7 +24,7 @@ git submodule update
 
 Now you need to install all dependencies using rosdep. To execute this command make sure that the correct catkin workspace is sourced and the repository you just cloned is (linked) inside the `src` directory.
 ```
-rosdep install ros_gremsy
+rosdep install --from-paths . --ignore-src -r -y
 ```
 
 After installing the dependencies you should be able to build the package using:
