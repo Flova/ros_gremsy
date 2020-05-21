@@ -3,6 +3,8 @@ A ROS interface to control Gremsy gimbals. Based on the [gSDK](https://github.co
 
 Disclaimer: This software package is not officially developed by or related to Gremsy.
 
+![Build CI](https://github.com/Flova/ros_gremsy/workflows/Build%20CI/badge.svg)
+
 ## Description
 This package includes a ROS Node which warps the gSDK for the Gremsy Gimbals which are mainly used for physical image stabilization. 
 
@@ -22,7 +24,7 @@ git submodule update
 
 Now you need to install all dependencies using rosdep. To execute this command make sure that the correct catkin workspace is sourced and the repository you just cloned is (linked) inside the `src` directory.
 ```
-rosdep install ros_gremsy
+rosdep install --from-paths . --ignore-src -r -y
 ```
 
 After installing the dependencies you should be able to build the package using:
