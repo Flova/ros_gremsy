@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
         dynamic_reconfigure
         std_msgs
         geometry_msgs
-        visualization_msgs
+        sensor_msgs
         )
 
 generate_dynamic_reconfigure_options(
