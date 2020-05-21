@@ -11,6 +11,9 @@
 #include "gimbal_interface.h"
 #include "serial_port.h"
 
+#define DEG_TO_RAD (M_PI / 180.0)
+#define RAD_TO_DEG (1 / (M_PI / 180.0))
+
 class GimbalNode
 {
 public:
