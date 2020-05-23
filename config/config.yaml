@@ -1,11 +1,11 @@
 # Config
 device: "/dev/ttyS0"
 baudrate: 115200
-state_poll_rate: 120
+state_poll_rate: 60.0
 gimbal_mode: 1
 tilt_axis_input_mode: 2
 roll_axis_input_mode: 2
 pan_axis_input_mode: 0
-tilt_axis_stabilize: 1
-roll_axis_stabilize: 1
-pan_axis_stabilize: 1
+tilt_axis_stabilize: True
+roll_axis_stabilize: True
+pan_axis_stabilize: True
