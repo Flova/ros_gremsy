@@ -19,7 +19,7 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     gimbal_goal_sub = nh.subscribe("/gimbal/goals", 1, &GimbalNode::setGoalsCallback, this);
 
     // Define SDK objects
-    serial_port_ = new Serial_Port(config_.device.c_str(), config_.baudrate);
+    serial_port_ = new Serial_Port(config_.device.c_str(), 115200); // TODO
     gimbal_interface_ = new Gimbal_Interface(serial_port_);
 
     // Start ther serial interface and the gimbal SDK
@@ -41,9 +41,9 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     }
 
     // Wait until the gimbal is on
-    while (gimbal_interface_->get_gimbal_status().mode != GIMBAL_STATE_ON)
+    while (gimbal_interface_->get_gimbal_status().mode <= GIMBAL_STATE_ON)
     {
-        ros::Duration(0.05).sleep();
+        ros::Duration(0.2).sleep();
     }
 
     // Set gimbal control modes
@@ -120,9 +120,9 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
 void GimbalNode::setGoalsCallback(geometry_msgs::Vector3Stamped message)
 {
     gimbal_interface_->set_gimbal_move(
-        RAD_TO_DEG * message.vector.y,
-        RAD_TO_DEG * message.vector.x,
-        RAD_TO_DEG * message.vector.z);
+        round(RAD_TO_DEG * message.vector.y * 100),
+        round(RAD_TO_DEG * message.vector.x * 100),
+        round(RAD_TO_DEG * message.vector.z * 100));
 }
 
 sensor_msgs::Imu GimbalNode::convertImuMavlinkMessageToROSMessage(mavlink_raw_imu_t message)

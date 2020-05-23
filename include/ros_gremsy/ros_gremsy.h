@@ -7,6 +7,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <dynamic_reconfigure/server.h>
 #include <ros_gremsy/ROSGremsyConfig.h>
+#include <cmath>
 #include <boost/bind.hpp>
 #include "gimbal_interface.h"
 #include "serial_port.h"
