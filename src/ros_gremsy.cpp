@@ -2,24 +2,24 @@
 
 GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 {
-    // Dynamic reconfigure stuff
+    // Initialize dynamic-reconfigure
     dynamic_reconfigure::Server<ros_gremsy::ROSGremsyConfig> server(pnh);
     dynamic_reconfigure::Server<ros_gremsy::ROSGremsyConfig>::CallbackType f;
     f = boost::bind(&GimbalNode::reconfigureCallback, this, _1, _2);
     server.setCallback(f);
 
     // Advertive Publishers
-    imu_pub = nh.advertise<sensor_msgs::Imu>("/gimbal/imu/data", 10);
-    encoder_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/gimbal/encoder", 10);
-    mount_orientation_incl_global_yaw = nh.advertise<geometry_msgs::Quaternion>("/gimbal/mount_orientation_global_yaw", 10);
-    mount_orientation_incl_local_yaw = nh.advertise<geometry_msgs::Quaternion>("/gimbal/mount_orientation_local_yaw", 10);
+    imu_pub = pnh.advertise<sensor_msgs::Imu>("imu/data", 10);
+    encoder_pub = pnh.advertise<geometry_msgs::Vector3Stamped>("encoder", 10);
+    mount_orientation_incl_global_yaw = pnh.advertise<geometry_msgs::Quaternion>("mount_orientation_global_yaw", 10);
+    mount_orientation_incl_local_yaw = pnh.advertise<geometry_msgs::Quaternion>("mount_orientation_local_yaw", 10);
 
 
     // Register Subscribers
-    gimbal_goal_sub = nh.subscribe("/gimbal/goals", 1, &GimbalNode::setGoalsCallback, this);
+    gimbal_goal_sub = pnh.subscribe("goals", 1, &GimbalNode::setGoalsCallback, this);
 
     // Define SDK objects
-    serial_port_ = new Serial_Port(config_.device.c_str(), 115200); // TODO
+    serial_port_ = new Serial_Port(config_.device.c_str(), config_.baudrate);
     gimbal_interface_ = new Gimbal_Interface(serial_port_);
 
     // Start ther serial interface and the gimbal SDK
@@ -171,7 +171,8 @@ int main(int argc, char **argv)
     // Init
     ros::init(argc, argv, "ros_gremsy");
     ros::NodeHandle nh;
-    GimbalNode n(nh, nh);
+    ros::NodeHandle pnh("~");
+    GimbalNode n(nh, pnh);
 
     return 0;
 }
