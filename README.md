@@ -40,13 +40,13 @@ roslaunch ros_gremsy gimbal.launch
 
 ## ROS Message API
 The node publishes:
-- `/gimbal/imu/data` with a [sensor_msgs/Imu](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Imu.html) message containing the raw gyro and accelerometer values. 
-- `/gimbal/encoder` with a [geometry_msgs/Vector3Stamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Vector3Stamped.html) message containing the encode values around the x (roll), y (pitch) and z (yaw) axis.
-- `/gimbal/mount_orientation_global_yaw` with a [geometry_msgs/Quaternion](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Quaternion.html) message representing the camera mount orientation in the global frame. This measurement is imprecise in the yaw axis because of the gyro drift.
-- `/gimbal/mount_orientation_local_yaw` with a [geometry_msgs/Quaternion](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Quaternion.html) message representing the camera mount orientation in the global frame except for the yaw axis which is provided relative to the gimbals mount on the vehicle or robot.
+- `/ros_gremsy/imu/data` with a [sensor_msgs/Imu](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Imu.html) message containing the raw gyro and accelerometer values. 
+- `/ros_gremsy/encoder` with a [geometry_msgs/Vector3Stamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Vector3Stamped.html) message containing the encode values around the x (roll), y (pitch) and z (yaw) axis.
+- `/ros_gremsy/mount_orientation_global_yaw` with a [geometry_msgs/Quaternion](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Quaternion.html) message representing the camera mount orientation in the global frame. This measurement is imprecise in the yaw axis because of the gyro drift.
+- `/ros_gremsy/mount_orientation_local_yaw` with a [geometry_msgs/Quaternion](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Quaternion.html) message representing the camera mount orientation in the global frame except for the yaw axis which is provided relative to the gimbals mount on the vehicle or robot.
 
 The node receives:
-- `/gimbal/goals` expects a [geometry_msgs/Vector3Stamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Vector3Stamped.html) message containing the desired angles for each axis. The frame for each axis (local or global), as well as the stabilization mode, can be configured in the `config.yaml` file.
+- `/ros_gremsy/goals` expects a [geometry_msgs/Vector3Stamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Vector3Stamped.html) message containing the desired angles for each axis. The frame for each axis (local or global), as well as the stabilization mode, can be configured in the `config.yaml` file.
 
 ## Further work
 - Better dynamic reconfiguration
