@@ -24,9 +24,7 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 
     // Start ther serial interface and the gimbal SDK
     serial_port_->start();
-	gimbal_interface_->start();
-
-    //ros::Duration(1.0).sleep(); // Wait until everythins is started (Only just in case)
+    gimbal_interface_->start();
 
     ///////////////////
     // Config Gimbal //
@@ -148,7 +146,9 @@ control_gimbal_mode_t GimbalNode::convertIntGimbalMode(int mode)
         case 0 : return GIMBAL_OFF;
         case 1 : return LOCK_MODE;
         case 2 : return FOLLOW_MODE;
-        default: return GIMBAL_OFF;
+        default:
+            ROS_ERROR_ONCE("Undefined gimbal mode used. Check the config file.");
+            return GIMBAL_OFF;
     }
 }
 
@@ -158,7 +158,9 @@ control_gimbal_axis_input_mode_t GimbalNode::convertIntToAxisInputMode(int mode)
         case 0 : return CTRL_ANGLE_BODY_FRAME;
         case 1 : return CTRL_ANGULAR_RATE;
         case 2 : return CTRL_ANGLE_ABSOLUTE_FRAME;
-        default: return CTRL_ANGLE_ABSOLUTE_FRAME;
+        default:
+            ROS_ERROR_ONCE("Undefined axis input mode used. Check the config file.");
+            return CTRL_ANGLE_ABSOLUTE_FRAME;
     }
 }
 
