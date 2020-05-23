@@ -41,7 +41,7 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     }
 
     // Wait until the gimbal is on
-    while (gimbal_interface_->get_gimbal_status().mode <= GIMBAL_STATE_ON)
+    while (gimbal_interface_->get_gimbal_status().mode < GIMBAL_STATE_ON)
     {
         ros::Duration(0.2).sleep();
     }
