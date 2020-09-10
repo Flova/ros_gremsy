@@ -81,10 +81,11 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // Publish Gimbal Encoder Values
     mavlink_mount_status_t mount_status = gimbal_interface_->get_gimbal_mount_status();
     geometry_msgs::Vector3Stamped encoder_ros_msg;
+    encoder_ros_msg.header.stamp = ros::Time::now();
     encoder_ros_msg.vector.x = (float) mount_status.pointing_b * DEG_TO_RAD;
     encoder_ros_msg.vector.y = (float) mount_status.pointing_a * DEG_TO_RAD;
     encoder_ros_msg.vector.z = (float) mount_status.pointing_c * DEG_TO_RAD;
-    // encoder_ros_msg.header TODO time stamps
+    // encoder_ros_msg.header TODO frame
     encoder_pub.publish(encoder_ros_msg);
 
     // Get Mount Orientation
