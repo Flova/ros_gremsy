@@ -72,6 +72,8 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 
 void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
 {
+    ros::Time timestamp = ros::Time::now();
+
     // Publish Gimbal IMU
     mavlink_raw_imu_t imu_mav = gimbal_interface_->get_gimbal_raw_imu();
     imu_mav.time_usec = gimbal_interface_->get_gimbal_time_stamps().raw_imu; // TODO implement rostime
@@ -81,7 +83,7 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // Publish Gimbal Encoder Values
     mavlink_mount_status_t mount_status = gimbal_interface_->get_gimbal_mount_status();
     geometry_msgs::Vector3Stamped encoder_ros_msg;
-    encoder_ros_msg.header.stamp = ros::Time::now();
+    encoder_ros_msg.header.stamp = timestamp;
     encoder_ros_msg.vector.x = (float) mount_status.pointing_b * DEG_TO_RAD;
     encoder_ros_msg.vector.y = (float) mount_status.pointing_a * DEG_TO_RAD;
     encoder_ros_msg.vector.z = (float) mount_status.pointing_c * DEG_TO_RAD;
@@ -103,6 +105,15 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     tf2::convert(quat_abs , quat_abs_msg);
     mount_orientation_incl_global_yaw.publish(quat_abs_msg);
 
+    // Publish transform for Camera Mount Orientation
+    geometry_msgs::TransformStamped transform_camera_mount;
+    transform_camera_mount.header.stamp =timestamp;
+    transform_camera_mount.header.frame_id = "gimbal_imu";
+    transform_camera_mount.child_frame_id = "camera_mount";
+    transform_camera_mount.transform.rotation = quat_abs_msg;
+    bc_.sendTransform(transform_camera_mount);
+
+
     // Publish Camera Mount Orientation in local frame (yaw relative to vehicle)
     tf2::Quaternion quat_loc;
     quat_loc.setRPY(
@@ -114,6 +125,14 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     geometry_msgs::Quaternion quat_loc_msg;
     tf2::convert(quat_loc , quat_loc_msg);
     mount_orientation_incl_local_yaw.publish(quat_loc_msg);
+
+    // Publish transform for Camera Mount Orientation with yaw relative to mount
+    geometry_msgs::TransformStamped transform_camera_mount_loc_yaw;
+    transform_camera_mount_loc_yaw.header.stamp =timestamp;
+    transform_camera_mount_loc_yaw.header.frame_id = "gimbal_imu_fixed_yaw";
+    transform_camera_mount_loc_yaw.child_frame_id = "camera_mount";
+    transform_camera_mount_loc_yaw.transform.rotation = quat_loc_msg;
+    bc_.sendTransform(transform_camera_mount_loc_yaw);
 }
 
 void GimbalNode::setGoalsCallback(geometry_msgs::Vector3Stamped message)
