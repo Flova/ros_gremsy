@@ -93,46 +93,32 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // Publish yaw motor transform
     geometry_msgs::TransformStamped transform_yaw_motor;
     transform_yaw_motor.header.stamp = timestamp;
-    transform_yaw_motor.header.frame_id = "gimbal_mount";
-    transform_yaw_motor.child_frame_id = "yaw_arm";
+    transform_yaw_motor.header.frame_id = "yaw_arm";
+    transform_yaw_motor.child_frame_id = "yaw_arm_frame";
     tf2::Quaternion q_yaw_rot;
     q_yaw_rot.setRPY(0, 0, encoder_ros_msg.vector.z);
     tf2::convert(q_yaw_rot, transform_yaw_motor.transform.rotation);
-    transform_yaw_motor.transform.translation.z = -0.05;
     bc_.sendTransform(transform_yaw_motor);
 
     // Publish roll motor transform
     geometry_msgs::TransformStamped transform_roll_motor;
     transform_roll_motor.header.stamp = timestamp;
-    transform_roll_motor.header.frame_id = "yaw_arm";
-    transform_roll_motor.child_frame_id = "roll_arm";
+    transform_roll_motor.header.frame_id = "roll_arm";
+    transform_roll_motor.child_frame_id = "roll_arm_frame";
     tf2::Quaternion q_roll_rot;
     q_roll_rot.setRPY(encoder_ros_msg.vector.x, 0, 0);
     tf2::convert(q_roll_rot, transform_roll_motor.transform.rotation);
-    transform_roll_motor.transform.translation.x = -0.18;
-    transform_roll_motor.transform.translation.z = -0.15;
     bc_.sendTransform(transform_roll_motor);
 
     // Publish pitch motor transform
     geometry_msgs::TransformStamped transform_pitch_motor;
     transform_pitch_motor.header.stamp = timestamp;
-    transform_pitch_motor.header.frame_id = "roll_arm";
-    transform_pitch_motor.child_frame_id = "pitch_arm";
+    transform_pitch_motor.header.frame_id = "pitch_arm";
+    transform_pitch_motor.child_frame_id = "pitch_arm_frame";
     tf2::Quaternion q_pitch_rot;
     q_pitch_rot.setRPY(0, encoder_ros_msg.vector.y, 0);
     tf2::convert(q_pitch_rot, transform_pitch_motor.transform.rotation);
-    transform_pitch_motor.transform.translation.x = 0.18;
-    transform_pitch_motor.transform.translation.y = 0.12;
     bc_.sendTransform(transform_pitch_motor);
-
-    // Publish static tf to camera mount
-    geometry_msgs::TransformStamped transform_camera_mount;
-    transform_camera_mount.header.stamp = timestamp;
-    transform_camera_mount.header.frame_id = "pitch_arm";
-    transform_camera_mount.child_frame_id = "camera_mount";
-    transform_camera_mount.transform.translation.y = -0.12;
-    bc_.sendTransform(transform_camera_mount);
-
 
     // Get Mount Orientation
     mavlink_mount_orientation_t mount_orientation = gimbal_interface_->get_gimbal_mount_orientation();
