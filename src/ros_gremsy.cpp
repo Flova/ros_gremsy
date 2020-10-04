@@ -72,6 +72,8 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 
 void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
 {
+    ros::Time timestamp = ros::Time::now();
+
     // Publish Gimbal IMU
     mavlink_raw_imu_t imu_mav = gimbal_interface_->get_gimbal_raw_imu();
     imu_mav.time_usec = gimbal_interface_->get_gimbal_time_stamps().raw_imu; // TODO implement rostime
@@ -81,12 +83,42 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // Publish Gimbal Encoder Values
     mavlink_mount_status_t mount_status = gimbal_interface_->get_gimbal_mount_status();
     geometry_msgs::Vector3Stamped encoder_ros_msg;
-    encoder_ros_msg.header.stamp = ros::Time::now();
+    encoder_ros_msg.header.stamp = timestamp;
     encoder_ros_msg.vector.x = (float) mount_status.pointing_b * DEG_TO_RAD;
     encoder_ros_msg.vector.y = (float) mount_status.pointing_a * DEG_TO_RAD;
     encoder_ros_msg.vector.z = (float) mount_status.pointing_c * DEG_TO_RAD;
     // encoder_ros_msg.header TODO frame
     encoder_pub.publish(encoder_ros_msg);
+
+    // Publish yaw motor transform
+    geometry_msgs::TransformStamped transform_yaw_motor;
+    transform_yaw_motor.header.stamp = timestamp;
+    transform_yaw_motor.header.frame_id = "yaw_arm";
+    transform_yaw_motor.child_frame_id = "yaw_arm_frame";
+    tf2::Quaternion q_yaw_rot;
+    q_yaw_rot.setRPY(0, 0, encoder_ros_msg.vector.z);
+    tf2::convert(q_yaw_rot, transform_yaw_motor.transform.rotation);
+    bc_.sendTransform(transform_yaw_motor);
+
+    // Publish roll motor transform
+    geometry_msgs::TransformStamped transform_roll_motor;
+    transform_roll_motor.header.stamp = timestamp;
+    transform_roll_motor.header.frame_id = "roll_arm";
+    transform_roll_motor.child_frame_id = "roll_arm_frame";
+    tf2::Quaternion q_roll_rot;
+    q_roll_rot.setRPY(encoder_ros_msg.vector.x, 0, 0);
+    tf2::convert(q_roll_rot, transform_roll_motor.transform.rotation);
+    bc_.sendTransform(transform_roll_motor);
+
+    // Publish pitch motor transform
+    geometry_msgs::TransformStamped transform_pitch_motor;
+    transform_pitch_motor.header.stamp = timestamp;
+    transform_pitch_motor.header.frame_id = "pitch_arm";
+    transform_pitch_motor.child_frame_id = "pitch_arm_frame";
+    tf2::Quaternion q_pitch_rot;
+    q_pitch_rot.setRPY(0, encoder_ros_msg.vector.y, 0);
+    tf2::convert(q_pitch_rot, transform_pitch_motor.transform.rotation);
+    bc_.sendTransform(transform_pitch_motor);
 
     // Get Mount Orientation
     mavlink_mount_orientation_t mount_orientation = gimbal_interface_->get_gimbal_mount_orientation();
@@ -103,6 +135,15 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     tf2::convert(quat_abs , quat_abs_msg);
     mount_orientation_incl_global_yaw.publish(quat_abs_msg);
 
+    // Publish transform for Camera Mount Orientation
+    geometry_msgs::TransformStamped transform_camera_mount_imu;
+    transform_camera_mount_imu.header.stamp =timestamp;
+    transform_camera_mount_imu.header.frame_id = "gimbal_imu";
+    transform_camera_mount_imu.child_frame_id = "camera_mount";
+    transform_camera_mount_imu.transform.rotation = quat_abs_msg;
+    bc_.sendTransform(transform_camera_mount_imu);
+
+
     // Publish Camera Mount Orientation in local frame (yaw relative to vehicle)
     tf2::Quaternion quat_loc;
     quat_loc.setRPY(
@@ -114,6 +155,14 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     geometry_msgs::Quaternion quat_loc_msg;
     tf2::convert(quat_loc , quat_loc_msg);
     mount_orientation_incl_local_yaw.publish(quat_loc_msg);
+
+    // Publish transform for Camera Mount Orientation with yaw relative to mount
+    geometry_msgs::TransformStamped transform_camera_mount_imu_loc_yaw;
+    transform_camera_mount_imu_loc_yaw.header.stamp =timestamp;
+    transform_camera_mount_imu_loc_yaw.header.frame_id = "gimbal_imu_fixed_yaw";
+    transform_camera_mount_imu_loc_yaw.child_frame_id = "camera_mount";
+    transform_camera_mount_imu_loc_yaw.transform.rotation = quat_loc_msg;
+    bc_.sendTransform(transform_camera_mount_imu_loc_yaw);
 }
 
 void GimbalNode::setGoalsCallback(geometry_msgs::Vector3Stamped message)
