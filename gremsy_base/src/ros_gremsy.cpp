@@ -93,28 +93,29 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     mavlink_mount_orientation_t mount_orientation = gimbal_interface_->get_gimbal_mount_orientation();
 
     // Publish Camera Mount Orientation in global frame (drifting)
-    tf2::Quaternion quat_abs;
-    quat_abs.setRPY(
-        DEG_TO_RAD * mount_orientation.roll,
-        DEG_TO_RAD * mount_orientation.pitch,
-        DEG_TO_RAD * mount_orientation.yaw_absolute);
-    quat_abs.normalize();
-
-    geometry_msgs::Quaternion quat_abs_msg;
-    tf2::convert(quat_abs , quat_abs_msg);
-    mount_orientation_incl_global_yaw.publish(quat_abs_msg);
+    mount_orientation_incl_global_yaw.publish(
+        tf2::toMsg(
+            convertYXZtoQuaternion(
+                mount_orientation.roll,
+                mount_orientation.pitch,
+                mount_orientation.yaw_absolute)));
 
     // Publish Camera Mount Orientation in local frame (yaw relative to vehicle)
-    tf2::Quaternion quat_loc;
-    quat_loc.setRPY(
-        DEG_TO_RAD * mount_orientation.roll,
-        DEG_TO_RAD * mount_orientation.pitch,
-        DEG_TO_RAD * mount_orientation.yaw);
-    quat_loc.normalize();
+    mount_orientation_incl_local_yaw.publish(
+        tf2::toMsg(
+            convertYXZtoQuaternion(
+                mount_orientation.roll,
+                mount_orientation.pitch,
+                mount_orientation.yaw)));
+}
 
-    geometry_msgs::Quaternion quat_loc_msg;
-    tf2::convert(quat_loc , quat_loc_msg);
-    mount_orientation_incl_local_yaw.publish(quat_loc_msg);
+Eigen::Quaterniond GimbalNode::convertYXZtoQuaternion(double roll, double pitch, double yaw)
+{
+    Eigen::Quaterniond quat_abs(
+                  Eigen::AngleAxisd(-DEG_TO_RAD * pitch, Eigen::Vector3d::UnitY())
+                * Eigen::AngleAxisd(-DEG_TO_RAD * roll, Eigen::Vector3d::UnitX())
+                * Eigen::AngleAxisd(DEG_TO_RAD * yaw, Eigen::Vector3d::UnitZ()));
+    return quat_abs;
 }
 
 void GimbalNode::setGoalsCallback(geometry_msgs::Vector3Stamped message)

@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
         sensor_msgs
         )
 
+find_package(Eigen3 REQUIRED)
+
 generate_dynamic_reconfigure_options(
         cfg/ROSGremsy.cfg
 )
