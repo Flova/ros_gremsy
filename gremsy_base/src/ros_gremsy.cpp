@@ -101,7 +101,7 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
                 mount_orientation.yaw_absolute)));
 
     // Publish Camera Mount Orientation in local frame (yaw relative to vehicle)
-    mount_orientation_incl_global_yaw.publish(
+    mount_orientation_incl_local_yaw.publish(
         tf2::toMsg(
             convertXZYtoQuaternion(
                 mount_orientation.roll,
