@@ -6,10 +6,10 @@ Disclaimer: This software package is not officially developed by or related to G
 ![Build CI](https://github.com/Flova/ros_gremsy/workflows/Build%20CI/badge.svg)
 
 ## Description
-This package includes a ROS Node which warps the gSDK for the Gremsy Gimbals which are mainly used for physical image stabilization. 
+This package includes a ROS Node which warps the gSDK for the Gremsy Gimbals which are mainly used for physical image stabilization.
 
-The gimbal is connected via UART with a Linux host device running this node. 
-Devices such as the Raspberry Pi feature a build-in UART interface others like most PCs or Laptops need a cheap USB Adapter. 
+The gimbal is connected via UART with a Linux host device running this node.
+Devices such as the Raspberry Pi feature a build-in UART interface others like most PCs or Laptops need a cheap USB Adapter.
 The used serial device, as well as many other gimbal specific parameters, can be configured in the `config.yaml` file.
 The node publishes the gimbals encoder positions, imu measurements, and the camera mount orientation.
 
@@ -29,18 +29,18 @@ rosdep install --from-paths . --ignore-src -r -y
 
 After installing the dependencies you should be able to build the package using:
 ```
-catkin build ros_gremsy
+catkin build
 ```
 
 ## Launching
 Type the following command to run the node. Make sure that the gimbal is connected properly, the Linux permissions regarding the serial interface are correct (this depends on your distro) and the config features the correct device and baudrate (default setting should be fine as far as I know).
 ```
-roslaunch ros_gremsy gimbal.launch
+roslaunch gremsy_bringup gimbal.launch
 ```
 
 ## ROS Message API
 The node publishes:
-- `/ros_gremsy/imu/data` with a [sensor_msgs/Imu](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Imu.html) message containing the raw gyro and accelerometer values. 
+- `/ros_gremsy/imu/data` with a [sensor_msgs/Imu](http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Imu.html) message containing the raw gyro and accelerometer values.
 - `/ros_gremsy/encoder` with a [geometry_msgs/Vector3Stamped](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Vector3Stamped.html) message containing the encode values around the x (roll), y (pitch) and z (yaw) axis.
 - `/ros_gremsy/mount_orientation_global_yaw` with a [geometry_msgs/Quaternion](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Quaternion.html) message representing the camera mount orientation in the global frame. This measurement is imprecise in the yaw axis because of the gyro drift.
 - `/ros_gremsy/mount_orientation_local_yaw` with a [geometry_msgs/Quaternion](http://docs.ros.org/melodic/api/geometry_msgs/html/msg/Quaternion.html) message representing the camera mount orientation in the global frame except for the yaw axis which is provided relative to the gimbals mount on the vehicle or robot.
