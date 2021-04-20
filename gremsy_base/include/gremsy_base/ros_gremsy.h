@@ -31,7 +31,7 @@ private:
     void setGoalsCallback(geometry_msgs::Vector3Stamped message);
     // Converts
     sensor_msgs::Imu convertImuMavlinkMessageToROSMessage(mavlink_raw_imu_t message);
-    Eigen::Quaterniond convertXZYtoQuaternion(double roll, double pitch, double yaw);
+    Eigen::Quaterniond convertYXZtoQuaternion(double roll, double pitch, double yaw);
     // Maps integer mode
     control_gimbal_axis_input_mode_t convertIntToAxisInputMode(int mode);
     // Maps integer mode

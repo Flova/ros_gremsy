@@ -95,7 +95,7 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // Publish Camera Mount Orientation in global frame (drifting)
     mount_orientation_incl_global_yaw.publish(
         tf2::toMsg(
-            convertXZYtoQuaternion(
+            convertYXZtoQuaternion(
                 mount_orientation.roll,
                 mount_orientation.pitch,
                 mount_orientation.yaw_absolute)));
@@ -103,13 +103,13 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // Publish Camera Mount Orientation in local frame (yaw relative to vehicle)
     mount_orientation_incl_local_yaw.publish(
         tf2::toMsg(
-            convertXZYtoQuaternion(
+            convertYXZtoQuaternion(
                 mount_orientation.roll,
                 mount_orientation.pitch,
                 mount_orientation.yaw)));
 }
 
-Eigen::Quaterniond GimbalNode::convertXZYtoQuaternion(double roll, double pitch, double yaw)
+Eigen::Quaterniond GimbalNode::convertYXZtoQuaternion(double roll, double pitch, double yaw)
 {
     Eigen::Quaterniond quat_abs(
                   Eigen::AngleAxisd(-DEG_TO_RAD * pitch, Eigen::Vector3d::UnitY())
