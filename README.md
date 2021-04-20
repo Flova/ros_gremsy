@@ -16,10 +16,8 @@ The node publishes the gimbals encoder positions, imu measurements, and the came
 ## Setup
 Run the following commands to clone this repository and update all submodules (needed for the external gSDK repository).
 ```
-git clone https://github.com/Flova/ros_gremsy
+git clone --recurse-submodules https://github.com/Flova/ros_gremsy
 cd ros_gremsy
-git submodule init
-git submodule update
 ```
 
 Now you need to install all dependencies using rosdep. To execute this command make sure that the correct catkin workspace is sourced and the repository you just cloned is (linked) inside the `src` directory.
