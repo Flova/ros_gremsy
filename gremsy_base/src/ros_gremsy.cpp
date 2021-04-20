@@ -9,14 +9,14 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     server.setCallback(f);
 
     // Advertive Publishers
-    imu_pub = pnh.advertise<sensor_msgs::Imu>("imu/data", 10);
-    encoder_pub = pnh.advertise<geometry_msgs::Vector3Stamped>("encoder", 1000);
-    mount_orientation_incl_global_yaw = pnh.advertise<geometry_msgs::Quaternion>("mount_orientation_global_yaw", 10);
-    mount_orientation_incl_local_yaw = pnh.advertise<geometry_msgs::Quaternion>("mount_orientation_local_yaw", 10);
+    imu_pub = nh.advertise<sensor_msgs::Imu>("/ros_gremsy/imu/data", 10);
+    encoder_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/ros_gremsy/encoder", 1000);
+    mount_orientation_incl_global_yaw = nh.advertise<geometry_msgs::Quaternion>("/ros_gremsy/mount_orientation_global_yaw", 10);
+    mount_orientation_incl_local_yaw = nh.advertise<geometry_msgs::Quaternion>("/ros_gremsy/mount_orientation_local_yaw", 10);
 
 
     // Register Subscribers
-    gimbal_goal_sub = pnh.subscribe("goals", 1, &GimbalNode::setGoalsCallback, this);
+    gimbal_goal_sub = nh.subscribe("/ros_gremsy/goals", 1, &GimbalNode::setGoalsCallback, this);
 
     // Define SDK objects
     serial_port_ = new Serial_Port(config_.device.c_str(), config_.baudrate);
@@ -86,7 +86,7 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     encoder_ros_msg.vector.y = ((float) mount_status.pointing_a) * DEG_TO_RAD;
     encoder_ros_msg.vector.z = ((float) mount_status.pointing_c) * DEG_TO_RAD;
     // encoder_ros_msg.header TODO time stamps
-    
+
     encoder_pub.publish(encoder_ros_msg);
 
     // Get Mount Orientation
