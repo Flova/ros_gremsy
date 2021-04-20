@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <ros/ros.h>
 #include <tf2/utils.h>
+#include <tf2_eigen/tf2_eigen.h>
 #include <sensor_msgs/Imu.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/Quaternion.h>
@@ -8,6 +9,7 @@
 #include <dynamic_reconfigure/server.h>
 #include <gremsy_base/ROSGremsyConfig.h>
 #include <cmath>
+#include <Eigen/Geometry>
 #include <boost/bind.hpp>
 #include "gimbal_interface.h"
 #include "serial_port.h"
@@ -29,6 +31,7 @@ private:
     void setGoalsCallback(geometry_msgs::Vector3Stamped message);
     // Converts
     sensor_msgs::Imu convertImuMavlinkMessageToROSMessage(mavlink_raw_imu_t message);
+    Eigen::Quaterniond convertXZYtoQuaternion(double roll, double pitch, double yaw);
     // Maps integer mode
     control_gimbal_axis_input_mode_t convertIntToAxisInputMode(int mode);
     // Maps integer mode
