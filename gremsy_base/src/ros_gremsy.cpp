@@ -113,8 +113,8 @@ Eigen::Quaterniond GimbalNode::convertXZYtoQuaternion(double roll, double pitch,
 {
     Eigen::Quaterniond quat_abs(
                   Eigen::AngleAxisd(-DEG_TO_RAD * pitch, Eigen::Vector3d::UnitY())
-                * Eigen::AngleAxisd(DEG_TO_RAD * yaw, Eigen::Vector3d::UnitZ())
-                * Eigen::AngleAxisd(-DEG_TO_RAD * roll, Eigen::Vector3d::UnitX()));
+                * Eigen::AngleAxisd(-DEG_TO_RAD * roll, Eigen::Vector3d::UnitX()
+                * Eigen::AngleAxisd(DEG_TO_RAD * yaw, Eigen::Vector3d::UnitZ())));
     return quat_abs;
 }
 
