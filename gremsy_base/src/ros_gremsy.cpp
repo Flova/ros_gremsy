@@ -1,10 +1,10 @@
-#include <ros_gremsy/ros_gremsy.h>
+#include <gremsy_base/ros_gremsy.h>
 
 GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 {
     // Initialize dynamic-reconfigure
-    dynamic_reconfigure::Server<ros_gremsy::ROSGremsyConfig> server(pnh);
-    dynamic_reconfigure::Server<ros_gremsy::ROSGremsyConfig>::CallbackType f;
+    dynamic_reconfigure::Server<gremsy_base::ROSGremsyConfig> server(pnh);
+    dynamic_reconfigure::Server<gremsy_base::ROSGremsyConfig>::CallbackType f;
     f = boost::bind(&GimbalNode::reconfigureCallback, this, _1, _2);
     server.setCallback(f);
 
@@ -165,14 +165,14 @@ control_gimbal_axis_input_mode_t GimbalNode::convertIntToAxisInputMode(int mode)
     }
 }
 
-void GimbalNode::reconfigureCallback(ros_gremsy::ROSGremsyConfig &config, uint32_t level) {
+void GimbalNode::reconfigureCallback(gremsy_base::ROSGremsyConfig &config, uint32_t level) {
     config_ = config;
 }
 
 int main(int argc, char **argv)
 {
     // Init
-    ros::init(argc, argv, "ros_gremsy");
+    ros::init(argc, argv, "gremsy_base");
     ros::NodeHandle nh;
     ros::NodeHandle pnh("~");
     GimbalNode n(nh, pnh);

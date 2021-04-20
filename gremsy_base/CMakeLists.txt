@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ros_gremsy)
+project(gremsy_base)
 set(CMAKE_CXX_STANDARD 17)
 
 ## Find catkin macros and libraries

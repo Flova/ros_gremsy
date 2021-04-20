@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ros_gremsy</name>
+  <name>gremsy_base</name>
   <version>0.0.1</version>
-  <description>The ros_gremsy package</description>
+  <description>The core of the ros_gremsy package</description>
 
   <maintainer email="7vahl@informatik.uni-hamurg.de">Florian Vahl</maintainer>
 

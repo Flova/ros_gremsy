@@ -6,7 +6,7 @@
 #include <geometry_msgs/Quaternion.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <dynamic_reconfigure/server.h>
-#include <ros_gremsy/ROSGremsyConfig.h>
+#include <gremsy_base/ROSGremsyConfig.h>
 #include <cmath>
 #include <boost/bind.hpp>
 #include "gimbal_interface.h"
@@ -22,7 +22,7 @@ public:
     GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh);
 private:
     // Dynamic reconfigure callback
-    void reconfigureCallback(ros_gremsy::ROSGremsyConfig &config, uint32_t level);
+    void reconfigureCallback(gremsy_base::ROSGremsyConfig &config, uint32_t level);
     // Timer which checks for new infomation regarding the gimbal
     void gimbalStateTimerCallback(const ros::TimerEvent& event);
     // Calback to set a new gimbal position
@@ -39,7 +39,7 @@ private:
     // Serial Interface
     Serial_Port* serial_port_;
     // Current config
-    ros_gremsy::ROSGremsyConfig config_;
+    gremsy_base::ROSGremsyConfig config_;
     // Publishers
     ros::Publisher
         imu_pub,
