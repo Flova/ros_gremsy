@@ -27,6 +27,8 @@ private:
     void reconfigureCallback(gremsy_base::ROSGremsyConfig &config, uint32_t level);
     // Timer which checks for new infomation regarding the gimbal
     void gimbalStateTimerCallback(const ros::TimerEvent& event);
+    // Timer which sets the gimbal goals
+    void gimbalGoalTimerCallback(const ros::TimerEvent& event);
     // Calback to set a new gimbal position
     void setGoalsCallback(geometry_msgs::Vector3Stamped message);
     // Converts
@@ -52,5 +54,7 @@ private:
     // Subscribers
     ros::Subscriber gimbal_goal_sub;
 
+    // Value store
     double yaw_difference_ = 0;
+    geometry_msgs::Vector3Stamped goals_;
 };

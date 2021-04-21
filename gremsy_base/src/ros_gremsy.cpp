@@ -8,6 +8,11 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
     f = boost::bind(&GimbalNode::reconfigureCallback, this, _1, _2);
     server.setCallback(f);
 
+    // Init state variables
+    goals_.vector.x = 0;
+    goals_.vector.y = 0;
+    goals_.vector.z = 0;
+
     // Advertive Publishers
     imu_pub = nh.advertise<sensor_msgs::Imu>("/ros_gremsy/imu/data", 10);
     encoder_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/ros_gremsy/encoder", 1000);
@@ -63,9 +68,13 @@ GimbalNode::GimbalNode(ros::NodeHandle nh, ros::NodeHandle pnh)
 
     gimbal_interface_->set_gimbal_axes_mode(tilt_axis_mode, roll_axis_mode, pan_axis_mode);
 
-    ros::Timer timer = nh.createTimer(
+    ros::Timer poll_timer = nh.createTimer(
         ros::Duration(1/config_.state_poll_rate),
         &GimbalNode::gimbalStateTimerCallback, this);
+
+    ros::Timer goal_timer = nh.createTimer(
+        ros::Duration(1/config_.goal_push_rate),
+        &GimbalNode::gimbalGoalTimerCallback, this);
 
     ros::spin();
 }
@@ -92,7 +101,7 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // Get Mount Orientation
     mavlink_mount_orientation_t mount_orientation = gimbal_interface_->get_gimbal_mount_orientation();
 
-    yaw_difference_ = mount_orientation.yaw_absolute - mount_orientation.yaw;
+    yaw_difference_ = DEG_TO_RAD * (mount_orientation.yaw_absolute - mount_orientation.yaw);
 
     // Publish Camera Mount Orientation in global frame (drifting)
     mount_orientation_incl_global_yaw.publish(
@@ -120,14 +129,24 @@ Eigen::Quaterniond GimbalNode::convertYXZtoQuaternion(double roll, double pitch,
     return quat_abs;
 }
 
-void GimbalNode::setGoalsCallback(geometry_msgs::Vector3Stamped message)
+void GimbalNode::gimbalGoalTimerCallback(const ros::TimerEvent& event)
 {
-    double z = message.vector.z + yaw_difference_;
+    double z = goals_.vector.z;
+
+    if (config_.lock_yaw_to_vehicle)
+    {
+        z += yaw_difference_;
+    }
 
     gimbal_interface_->set_gimbal_move(
-        RAD_TO_DEG * message.vector.y,
-        RAD_TO_DEG * message.vector.x,
+        RAD_TO_DEG * goals_.vector.y,
+        RAD_TO_DEG * goals_.vector.x,
         RAD_TO_DEG * z);
+}
+
+void GimbalNode::setGoalsCallback(geometry_msgs::Vector3Stamped message)
+{
+    goals_ = message;
 }
 
 sensor_msgs::Imu GimbalNode::convertImuMavlinkMessageToROSMessage(mavlink_raw_imu_t message)
