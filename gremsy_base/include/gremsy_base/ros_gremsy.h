@@ -51,4 +51,6 @@ private:
         mount_orientation_incl_local_yaw;
     // Subscribers
     ros::Subscriber gimbal_goal_sub;
+
+    double yaw_difference_ = 0;
 };

@@ -92,6 +92,8 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     // Get Mount Orientation
     mavlink_mount_orientation_t mount_orientation = gimbal_interface_->get_gimbal_mount_orientation();
 
+    yaw_difference_ = mount_orientation.yaw_absolute - mount_orientation.yaw;
+
     // Publish Camera Mount Orientation in global frame (drifting)
     mount_orientation_incl_global_yaw.publish(
         tf2::toMsg(
@@ -120,10 +122,12 @@ Eigen::Quaterniond GimbalNode::convertYXZtoQuaternion(double roll, double pitch,
 
 void GimbalNode::setGoalsCallback(geometry_msgs::Vector3Stamped message)
 {
+    double z = message.vector.z + yaw_difference_;
+
     gimbal_interface_->set_gimbal_move(
         RAD_TO_DEG * message.vector.y,
         RAD_TO_DEG * message.vector.x,
-        RAD_TO_DEG * message.vector.z);
+        RAD_TO_DEG * z);
 }
 
 sensor_msgs::Imu GimbalNode::convertImuMavlinkMessageToROSMessage(mavlink_raw_imu_t message)
