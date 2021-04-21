@@ -9,5 +9,5 @@ roll_axis_input_mode: 2
 pan_axis_input_mode: 2
 tilt_axis_stabilize: True
 roll_axis_stabilize: True
-pan_axis_stabilize: False
+pan_axis_stabilize: True
 lock_yaw_to_vehicle: True
