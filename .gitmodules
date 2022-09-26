@@ -1,3 +1,7 @@
 [submodule "gremsy_base/src/gSDK_Linux"]
 	path = gremsy_base/src/gSDK_Linux
 	url = ../../Gremsy/gSDK.git
+[submodule "gremsy_base/src/gSDK"]
+	path = gremsy_base/src/gSDK
+	url = https://github.com/Gremsy/gSDK.git
+	branch = gSDK_V3_alpha

@@ -13,6 +13,7 @@
 #include <boost/bind.hpp>
 #include "gimbal_interface.h"
 #include "serial_port.h"
+#include <signal.h>
 
 #define DEG_TO_RAD (M_PI / 180.0)
 #define RAD_TO_DEG (180.0 / M_PI)
@@ -31,13 +32,6 @@ private:
     void gimbalGoalTimerCallback(const ros::TimerEvent& event);
     // Calback to set a new gimbal position
     void setGoalsCallback(geometry_msgs::Vector3Stamped message);
-    // Converts
-    sensor_msgs::Imu convertImuMavlinkMessageToROSMessage(mavlink_raw_imu_t message);
-    Eigen::Quaterniond convertYXZtoQuaternion(double roll, double pitch, double yaw);
-    // Maps integer mode
-    control_gimbal_axis_input_mode_t convertIntToAxisInputMode(int mode);
-    // Maps integer mode
-    control_gimbal_mode_t convertIntGimbalMode(int mode);
 
     // Gimbal SDK
     Gimbal_Interface* gimbal_interface_;
@@ -46,15 +40,12 @@ private:
     // Current config
     gremsy_base::ROSGremsyConfig config_;
     // Publishers
-    ros::Publisher
-        imu_pub,
-        encoder_pub,
-        mount_orientation_incl_global_yaw,
-        mount_orientation_incl_local_yaw;
+    ros::Publisher encoder_pub;
     // Subscribers
     ros::Subscriber gimbal_goal_sub;
 
     // Value store
-    double yaw_difference_ = 0;
     geometry_msgs::Vector3Stamped goals_;
+
+
 };
