@@ -1,16 +1,18 @@
-#include <unistd.h>
-#include <ros/ros.h>
-#include <tf2/utils.h>
-#include <tf2_eigen/tf2_eigen.h>
-#include <sensor_msgs/Imu.h>
-#include <geometry_msgs/Vector3Stamped.h>
-#include <geometry_msgs/Quaternion.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <dynamic_reconfigure/server.h>
-#include <gremsy_base/ROSGremsyConfig.h>
-#include <cmath>
-#include <Eigen/Geometry>
 #include <boost/bind.hpp>
+#include <cmath>
+#include <dynamic_reconfigure/server.h>
+#include <Eigen/Geometry>
+#include <geometry_msgs/Quaternion.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
+#include <gremsy_base/ROSGremsyConfig.h>
+#include <ros/ros.h>
+#include <sensor_msgs/Imu.h>
+#include <tf2_eigen/tf2_eigen.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/utils.h>
+#include <unistd.h>
 #include "gimbal_interface.h"
 #include "serial_port.h"
 #include <signal.h>
@@ -32,6 +34,8 @@ private:
     void gimbalGoalTimerCallback(const ros::TimerEvent& event);
     // Calback to set a new gimbal position
     void setGoalsCallback(geometry_msgs::Vector3Stamped message);
+    // Converter
+    Eigen::Quaterniond convertYXZtoQuaternion(double roll, double pitch, double yaw);
 
     // Gimbal SDK
     Gimbal_Interface* gimbal_interface_;
@@ -40,9 +44,12 @@ private:
     // Current config
     gremsy_base::ROSGremsyConfig config_;
     // Publishers
-    ros::Publisher encoder_pub;
+    ros::Publisher encoder_pub, imu_pub;
     // Subscribers
     ros::Subscriber gimbal_goal_sub;
+
+    // TF Broadcasters
+    tf2_ros::TransformBroadcaster bc_;
 
     // Value store
     geometry_msgs::Vector3Stamped goals_;
