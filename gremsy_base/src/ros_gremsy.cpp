@@ -87,7 +87,10 @@ void GimbalNode::gimbalStateTimerCallback(const ros::TimerEvent& event)
     encoder_ros_msg.vector.y = ((float) encoder_values.pitch) * DEG_TO_RAD;
     encoder_ros_msg.vector.z = ((float) encoder_values.yaw) * DEG_TO_RAD;
 
-    encoder_pub.publish(encoder_ros_msg); 
+    if (encoder_values.roll or encoder_values.pitch or encoder_values.yaw)
+    {
+        encoder_pub.publish(encoder_ros_msg); 
+    }
 
     //// Publish Gimbal IMU (Currently this deadlocks)
     //Gimbal_Interface::imu_t imu_data = gimbal_interface_->get_gimbal_raw_imu();
